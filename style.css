@@ -1,0 +1,733 @@
+/* Réinitialisation générale */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* Page */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: #fff8f3;
+    color: #35170f;
+
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.5;
+}
+
+
+/* En-tête */
+
+header {
+    width: 100%;
+
+    background-color: #fffaf6;
+    border-bottom: 1px solid #eadbd3;
+}
+
+.header-contenu {
+    width: 84%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+    padding: 20px 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+/* Logo */
+
+.logo h3 {
+    display: flex;
+    align-items: center;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 700;
+
+    color: #35170f;
+}
+
+.point {
+    margin-right: 7px;
+
+    color: #b84b2a;
+    font-size: 30px;
+    font-style: normal;
+    line-height: 1;
+}
+
+
+/* Navigation */
+
+nav a {
+    color: #35170f;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+
+    text-decoration: none;
+}
+
+nav a:hover {
+    color: #b84b2a;
+}
+
+
+/* Contenu principal */
+
+main {
+    width: 84%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+    padding: 45px 0 65px;
+}
+
+
+/* Présentation */
+
+.hero {
+    margin-bottom: 25px;
+}
+
+.hero h1 {
+    margin-bottom: 6px;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 42px;
+    line-height: 1.2;
+
+    color: #35170f;
+}
+
+.subtitle {
+    max-width: 650px;
+
+    color: #765044;
+
+    font-size: 14px;
+}
+
+
+/* Filtres */
+
+.filtres {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-top: 28px;
+    margin-bottom: 35px;
+}
+
+.filtres button {
+    padding: 11px 20px;
+
+    border: 1px solid #e8c9bb;
+    border-radius: 25px;
+
+    background-color: #fbece5;
+    color: #4b2a20;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.filtres button:hover {
+    background-color: #f4ddd3;
+}
+
+
+/* Filtre sélectionné */
+
+.filtres button.active {
+    background-color: #c54a24;
+    border-color: #c54a24;
+
+    color: #ffffff;
+}
+
+
+/* Zone recherche + tri */
+
+.outils {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 18px;
+}
+
+
+/* Recherche */
+
+.recherche {
+    flex: 1;
+}
+
+#rechercheLivre {
+    width: 100%;
+    max-width: 450px;
+
+    padding: 13px 16px;
+
+    border: 1px solid #e6cfc3;
+    border-radius: 9px;
+
+    background-color: #fffaf6;
+    color: #4b2a20;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition: 0.2s;
+}
+
+#rechercheLivre::placeholder {
+    color: #9b8177;
+}
+
+#rechercheLivre:focus {
+    border-color: #c54a24;
+}
+
+
+/* Tri */
+
+.tri,
+.zone-tri {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    color: #765044;
+
+    font-size: 14px;
+}
+
+#triLivres {
+    padding: 11px 15px;
+
+    border: 1px solid #e6cfc3;
+    border-radius: 9px;
+
+    background-color: #fffaf6;
+    color: #4b2a20;
+
+    font-size: 14px;
+
+    outline: none;
+    cursor: pointer;
+}
+
+#triLivres:focus {
+    border-color: #c54a24;
+}
+
+
+/* Nombre de résultats */
+
+.resultats {
+    margin-bottom: 20px;
+}
+
+.resultats p {
+    color: #76594d;
+    font-size: 14px;
+}
+
+
+/* Message lorsqu'il n'y a aucun résultat */
+
+.aucun-resultat {
+    display: none;
+
+    margin-bottom: 30px;
+    padding: 30px;
+
+    border: 1px solid #e6cfc3;
+    border-radius: 10px;
+
+    background-color: #fffaf6;
+    color: #76594d;
+
+    text-align: center;
+}
+
+
+/* Grille des livres */
+
+.catalogue {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    column-gap: 26px;
+    row-gap: 30px;
+}
+
+
+/* Carte livre */
+
+.livre {
+    position: relative;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    border: 1px solid #ead1c5;
+    border-radius: 10px;
+
+    background-color: #fffaf6;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* Effet au survol */
+
+.livre:hover {
+    transform: translateY(-5px);
+
+    box-shadow: 0 10px 25px rgba(60, 30, 20, 0.12);
+}
+
+
+/* Zone de couverture */
+
+.couverture {
+    width: 100%;
+    height: 280px;
+
+    overflow: hidden;
+
+    background-color: #f5e9e2;
+}
+
+
+/* Véritable image de couverture */
+
+.couverture img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    transition: transform 0.35s ease;
+}
+
+
+/* Zoom léger de l'image */
+
+.livre:hover .couverture img {
+    transform: scale(1.04);
+}
+
+
+/* Contenu du livre */
+
+.contenu-livre {
+    min-height: 135px;
+
+    padding: 15px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Titre */
+
+.contenu-livre h2 {
+    margin-bottom: 5px;
+
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-size: 18px;
+    line-height: 1.2;
+
+    color: #35170f;
+}
+
+
+/* Auteur */
+
+.auteur {
+    margin-bottom: 20px;
+
+    color: #86594a;
+
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+/* Informations */
+
+.infos {
+    margin-top: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+/* Badge catégorie */
+
+.categorie {
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background-color: #f7e3db;
+
+    color: #4b2a20;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* Année */
+
+.annee {
+    color: #76594d;
+
+    font-size: 11px;
+}
+
+
+/* Bouton cœur */
+
+.bouton-coeur {
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background-color: rgba(255, 255, 255, 0.92);
+    color: #aa4e2f;
+
+    font-size: 23px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    z-index: 10;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    transition: 0.2s;
+}
+
+
+/* Survol du cœur */
+
+.bouton-coeur:hover {
+    transform: scale(1.1);
+}
+
+
+/* Cœur favori */
+
+.bouton-coeur.favori {
+    background-color: #aa4e2f;
+
+    color: #ffffff;
+}
+
+
+/* Footer */
+
+footer {
+    width: 100%;
+
+    padding: 25px 8%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-top: 1px solid #eadbd3;
+
+    background-color: #fff3ed;
+
+    color: #76594d;
+
+    font-size: 12px;
+}
+
+
+/* Réseaux sociaux */
+
+.reseaux {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.reseaux a {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    text-decoration: none;
+
+    transition: 0.2s;
+}
+
+.reseaux i {
+    font-size: 18px;
+}
+
+
+/* Instagram */
+
+.reseaux .instagram {
+    background: linear-gradient(
+        45deg,
+        #feda75,
+        #fa7e1e,
+        #d62976,
+        #962fbf,
+        #4f5bd5
+    );
+
+    color: #ffffff;
+}
+
+
+/* X */
+
+.reseaux .twitter {
+    background-color: #000000;
+
+    color: #ffffff;
+}
+
+
+/* Facebook */
+
+.reseaux .facebook {
+    background-color: #1877f2;
+
+    color: #ffffff;
+}
+
+
+/* Effet réseaux */
+
+.reseaux a:hover {
+    transform: scale(1.1);
+}
+
+
+/* Tablette */
+
+@media screen and (max-width: 900px) {
+
+    .header-contenu,
+    main {
+        width: 90%;
+    }
+
+    .catalogue {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .outils {
+        align-items: flex-start;
+    }
+
+    footer {
+        padding: 25px 5%;
+    }
+}
+
+
+/* Téléphone */
+
+@media screen and (max-width: 520px) {
+
+    .header-contenu {
+        width: 90%;
+
+        padding: 16px 0;
+    }
+
+    .logo h3 {
+        font-size: 17px;
+    }
+
+    .point {
+        font-size: 25px;
+    }
+
+    nav a {
+        font-size: 13px;
+    }
+
+
+    main {
+        width: 90%;
+
+        padding-top: 30px;
+    }
+
+
+    .hero h1 {
+        font-size: 34px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+    }
+
+
+    .filtres {
+        gap: 8px;
+
+        margin-bottom: 25px;
+    }
+
+    .filtres button {
+        padding: 9px 14px;
+
+        font-size: 12px;
+    }
+
+
+    .outils {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 12px;
+    }
+
+
+    #rechercheLivre {
+        max-width: 100%;
+    }
+
+
+    .tri,
+    .zone-tri {
+        justify-content: space-between;
+    }
+
+    #triLivres {
+        flex: 1;
+    }
+
+
+    .catalogue {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 14px;
+    }
+
+
+    .couverture {
+        height: 210px;
+    }
+
+
+    .contenu-livre {
+        min-height: 150px;
+
+        padding: 12px;
+    }
+
+
+    .contenu-livre h2 {
+        font-size: 15px;
+    }
+
+
+    .auteur {
+        font-size: 11px;
+    }
+
+
+    .categorie {
+        padding: 4px 7px;
+
+        font-size: 7px;
+    }
+
+
+    .annee {
+        font-size: 10px;
+    }
+
+
+    .bouton-coeur {
+        top: 8px;
+        right: 8px;
+
+        width: 32px;
+        height: 32px;
+
+        font-size: 19px;
+    }
+
+
+    footer {
+        padding: 20px 5%;
+
+        flex-direction: column;
+
+        gap: 16px;
+
+        text-align: center;
+    }
+
+}
