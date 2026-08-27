@@ -1,18 +1,30 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
 
-$erreurs = [];
+$csrf_token = genererTokenCSRF();
+
+$erreur = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $nom = trim($_POST["nom"] ?? "");
-
-    if ($nom === "") {
-        $erreurs[] = "Le nom de la catégorie est obligatoire.";
+    if (
+        !isset($_POST["csrf_token"]) ||
+        !verifierTokenCSRF($_POST["csrf_token"])
+    ) {
+        die("Erreur de sécurité : token CSRF invalide.");
     }
 
-    if (empty($erreurs)) {
+
+    $nom = trim($_POST["nom"] ?? "");
+
+
+    if ($nom === "") {
+
+        $erreur = "Le nom de la catégorie est obligatoire.";
+
+    } else {
 
         $stmt = $pdo->prepare("
             SELECT id
@@ -24,24 +36,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ":nom" => $nom
         ]);
 
+
         if ($stmt->fetch()) {
-            $erreurs[] = "Cette catégorie existe déjà.";
+
+            $erreur = "Cette catégorie existe déjà.";
+
+        } else {
+
+            $stmt = $pdo->prepare("
+                INSERT INTO categories (nom)
+                VALUES (:nom)
+            ");
+
+            $stmt->execute([
+                ":nom" => $nom
+            ]);
+
+
+            /* Message flash */
+
+            definirMessage("Catégorie ajoutée avec succès.");
+
+
+            /* Redirection */
+
+            header("Location: categories.php");
+            exit;
         }
-    }
-
-    if (empty($erreurs)) {
-
-        $stmt = $pdo->prepare("
-            INSERT INTO categories (nom)
-            VALUES (:nom)
-        ");
-
-        $stmt->execute([
-            ":nom" => $nom
-        ]);
-
-        header("Location: categories.php");
-        exit;
     }
 }
 
@@ -54,7 +75,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Ajouter une catégorie</title>
 
@@ -64,29 +88,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <h1>Ajouter une catégorie</h1>
 
+
     <p>
+
         <a href="categories.php">
             ← Retour aux catégories
         </a>
+
     </p>
 
-    <?php if (!empty($erreurs)): ?>
 
-        <div>
+    <?php if ($erreur): ?>
 
-            <?php foreach ($erreurs as $erreur): ?>
+        <p style="color:red;">
 
-                <p>
-                    <?= htmlspecialchars($erreur) ?>
-                </p>
+            <?= htmlspecialchars($erreur) ?>
 
-            <?php endforeach; ?>
-
-        </div>
+        </p>
 
     <?php endif; ?>
 
+
     <form method="POST">
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars($csrf_token) ?>"
+        >
+
 
         <div>
 
@@ -104,10 +134,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         </div>
 
+
         <br>
 
+
         <button type="submit">
-            Ajouter la catégorie
+            Ajouter
         </button>
 
     </form>

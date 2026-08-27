@@ -1,15 +1,33 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
+
+$csrf_token = genererTokenCSRF();
 
 $erreurs = [];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+    /* Vérification CSRF */
+
+    if (
+        !isset($_POST["csrf_token"]) ||
+        !verifierTokenCSRF($_POST["csrf_token"])
+    ) {
+        die("Erreur de sécurité : token CSRF invalide.");
+    }
+
+
+    /* Récupération des données */
+
     $titre = trim($_POST["titre"] ?? "");
     $auteur = trim($_POST["auteur"] ?? "");
     $categorie_id = $_POST["categorie_id"] ?? "";
     $annee = $_POST["annee"] ?? "";
+
+
+    /* Validation */
 
     if ($titre === "") {
         $erreurs[] = "Le titre est obligatoire.";
@@ -19,17 +37,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $erreurs[] = "L'auteur est obligatoire.";
     }
 
-    if ($categorie_id === "" || !filter_var($categorie_id, FILTER_VALIDATE_INT)) {
+    if (
+        $categorie_id === "" ||
+        !filter_var($categorie_id, FILTER_VALIDATE_INT)
+    ) {
         $erreurs[] = "La catégorie est obligatoire.";
     }
 
-    if ($annee === "" || !filter_var($annee, FILTER_VALIDATE_INT)) {
+    if (
+        $annee === "" ||
+        !filter_var($annee, FILTER_VALIDATE_INT)
+    ) {
         $erreurs[] = "L'année doit être un nombre.";
     }
 
-    if (!isset($_FILES["image"]) || $_FILES["image"]["error"] === UPLOAD_ERR_NO_FILE) {
+
+    /* Vérification de l'image */
+
+    if (
+        !isset($_FILES["image"]) ||
+        $_FILES["image"]["error"] === UPLOAD_ERR_NO_FILE
+    ) {
+
         $erreurs[] = "L'image est obligatoire.";
+
     }
+
 
     if (empty($erreurs)) {
 
@@ -39,26 +72,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "image/webp"
         ];
 
-        if (!in_array($_FILES["image"]["type"], $typesAutorises, true)) {
+        if (
+            !in_array(
+                $_FILES["image"]["type"],
+                $typesAutorises,
+                true
+            )
+        ) {
             $erreurs[] = "Le fichier doit être une image JPG, PNG ou WEBP.";
         }
 
-        if ($_FILES["image"]["size"] > 5 * 1024 * 1024) {
+        if (
+            $_FILES["image"]["size"] > 5 * 1024 * 1024
+        ) {
             $erreurs[] = "L'image ne doit pas dépasser 5 Mo.";
         }
     }
 
+
+    /* Ajout du livre */
+
     if (empty($erreurs)) {
 
         $extension = strtolower(
-            pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION)
+            pathinfo(
+                $_FILES["image"]["name"],
+                PATHINFO_EXTENSION
+            )
         );
 
         $nomImage = uniqid("livre_", true) . "." . $extension;
 
         $cheminUpload = "../uploads/" . $nomImage;
 
-        if (!move_uploaded_file($_FILES["image"]["tmp_name"], $cheminUpload)) {
+
+        if (
+            !move_uploaded_file(
+                $_FILES["image"]["tmp_name"],
+                $cheminUpload
+            )
+        ) {
 
             $erreurs[] = "Impossible d'envoyer l'image.";
 
@@ -68,9 +121,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $sql = "
                 INSERT INTO livres
-                (titre, auteur, categorie_id, annee, image)
+                (
+                    titre,
+                    auteur,
+                    categorie_id,
+                    annee,
+                    image
+                )
                 VALUES
-                (:titre, :auteur, :categorie_id, :annee, :image)
+                (
+                    :titre,
+                    :auteur,
+                    :categorie_id,
+                    :annee,
+                    :image
+                )
             ";
 
             $stmt = $pdo->prepare($sql);
@@ -83,12 +148,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ":image" => $cheminBDD
             ]);
 
+
+            /* Message flash */
+
+            definirMessage("Livre ajouté avec succès.");
+
+
+            /* Redirection */
+
             header("Location: index.php");
             exit;
         }
     }
 }
 
+
+/* Récupération des catégories */
 
 $stmt = $pdo->prepare("
     SELECT id, nom
@@ -109,7 +184,10 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Ajouter un livre</title>
 
@@ -120,10 +198,13 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h1>Ajouter un livre</h1>
 
     <p>
+
         <a href="index.php">
             ← Retour aux livres
         </a>
+
     </p>
+
 
     <?php if (!empty($erreurs)): ?>
 
@@ -142,7 +223,17 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php endif; ?>
 
 
-    <form method="POST" enctype="multipart/form-data">
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars($csrf_token) ?>"
+        >
+
 
         <div>
 
@@ -154,7 +245,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 type="text"
                 id="titre"
                 name="titre"
-                value="<?= htmlspecialchars($_POST['titre'] ?? '') ?>"
+                value="<?= htmlspecialchars($_POST["titre"] ?? "") ?>"
                 required
             >
 
@@ -174,7 +265,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 type="text"
                 id="auteur"
                 name="auteur"
-                value="<?= htmlspecialchars($_POST['auteur'] ?? '') ?>"
+                value="<?= htmlspecialchars($_POST["auteur"] ?? "") ?>"
                 required
             >
 
@@ -200,13 +291,19 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     -- Choisir une catégorie --
                 </option>
 
+
                 <?php foreach ($categories as $categorie): ?>
 
                     <option
-                        value="<?= htmlspecialchars($categorie['id']) ?>"
-                        <?= (($_POST['categorie_id'] ?? '') == $categorie['id']) ? 'selected' : '' ?>
+                        value="<?= htmlspecialchars($categorie["id"]) ?>"
+                        <?= (
+                            ($_POST["categorie_id"] ?? "")
+                            == $categorie["id"]
+                        ) ? "selected" : "" ?>
                     >
-                        <?= htmlspecialchars($categorie['nom']) ?>
+
+                        <?= htmlspecialchars($categorie["nom"]) ?>
+
                     </option>
 
                 <?php endforeach; ?>
@@ -229,7 +326,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 type="number"
                 id="annee"
                 name="annee"
-                value="<?= htmlspecialchars($_POST['annee'] ?? '') ?>"
+                value="<?= htmlspecialchars($_POST["annee"] ?? "") ?>"
                 required
             >
 

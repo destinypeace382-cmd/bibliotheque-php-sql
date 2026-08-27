@@ -1,8 +1,20 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
 
-$id = $_GET["id"] ?? null;
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    die("Méthode non autorisée.");
+}
+
+if (
+    !isset($_POST["csrf_token"]) ||
+    !verifierTokenCSRF($_POST["csrf_token"])
+) {
+    die("Erreur de sécurité : token CSRF invalide.");
+}
+
+$id = $_POST["id"] ?? null;
 
 if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
     die("Catégorie invalide.");
@@ -28,7 +40,7 @@ if (!$categorie) {
 }
 
 
-/* Vérifier si des livres utilisent cette catégorie */
+/* Vérifier si des livres utilisent la catégorie */
 
 $stmt = $pdo->prepare("
     SELECT COUNT(*)
@@ -43,7 +55,7 @@ $stmt->execute([
 $nombreLivres = $stmt->fetchColumn();
 
 
-/* Empêcher la suppression si la catégorie contient des livres */
+/* Empêcher la suppression si elle est utilisée */
 
 if ($nombreLivres > 0) {
 
@@ -67,7 +79,12 @@ $stmt->execute([
 ]);
 
 
-/* Retour à la liste */
+/* Message flash */
+
+definirMessage("Catégorie supprimée avec succès.");
+
+
+/* Redirection */
 
 header("Location: categories.php");
 exit;

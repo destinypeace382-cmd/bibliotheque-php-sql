@@ -1,6 +1,9 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
+
+$message = recupererMessage();
 
 $stmt = $pdo->prepare("
     SELECT
@@ -36,6 +39,14 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <h1>Gestion des catégories</h1>
+
+    <?php if ($message): ?>
+
+        <p style="color: green;">
+            <?= htmlspecialchars($message) ?>
+        </p>
+
+    <?php endif; ?>
 
     <p>
         <a href="index.php">
@@ -92,12 +103,30 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         |
 
-                        <a
-                            href="categorie-supprimer.php?id=<?= htmlspecialchars($categorie["id"]) ?>"
-                            onclick="return confirm('Voulez-vous vraiment supprimer cette catégorie ?');"
+                        <form
+                            action="categorie-supprimer.php"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Voulez-vous vraiment supprimer cette catégorie ?');"
                         >
-                            Supprimer
-                        </a>
+
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= htmlspecialchars($categorie["id"]) ?>"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="<?= htmlspecialchars(genererTokenCSRF()) ?>"
+                            >
+
+                            <button type="submit">
+                                Supprimer
+                            </button>
+
+                        </form>
 
                     </td>
 

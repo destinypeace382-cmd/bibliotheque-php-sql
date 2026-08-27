@@ -1,6 +1,9 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
+
+$csrf_token = genererTokenCSRF();
 
 $erreurs = [];
 
@@ -47,10 +50,25 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+    /* Vérification CSRF */
+
+    if (
+        !isset($_POST["csrf_token"]) ||
+        !verifierTokenCSRF($_POST["csrf_token"])
+    ) {
+        die("Erreur de sécurité : token CSRF invalide.");
+    }
+
+
+    /* Récupération des données */
+
     $titre = trim($_POST["titre"] ?? "");
     $auteur = trim($_POST["auteur"] ?? "");
     $categorie_id = $_POST["categorie_id"] ?? "";
     $annee = $_POST["annee"] ?? "";
+
+
+    /* Validation */
 
     if ($titre === "") {
         $erreurs[] = "Le titre est obligatoire.";
@@ -60,16 +78,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $erreurs[] = "L'auteur est obligatoire.";
     }
 
-    if ($categorie_id === "" || !filter_var($categorie_id, FILTER_VALIDATE_INT)) {
+    if (
+        $categorie_id === "" ||
+        !filter_var($categorie_id, FILTER_VALIDATE_INT)
+    ) {
         $erreurs[] = "La catégorie est obligatoire.";
     }
 
-    if ($annee === "" || !filter_var($annee, FILTER_VALIDATE_INT)) {
+    if (
+        $annee === "" ||
+        !filter_var($annee, FILTER_VALIDATE_INT)
+    ) {
         $erreurs[] = "L'année doit être un nombre.";
     }
 
 
-    /* Vérification d'une nouvelle image */
+    /* Vérification de la nouvelle image */
 
     $nouvelleImage = false;
 
@@ -84,11 +108,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "image/webp"
         ];
 
-        if (!in_array($_FILES["image"]["type"], $typesAutorises, true)) {
+        if (
+            !in_array(
+                $_FILES["image"]["type"],
+                $typesAutorises,
+                true
+            )
+        ) {
             $erreurs[] = "Le fichier doit être une image JPG, PNG ou WEBP.";
         }
 
-        if ($_FILES["image"]["size"] > 5 * 1024 * 1024) {
+        if (
+            $_FILES["image"]["size"] > 5 * 1024 * 1024
+        ) {
             $erreurs[] = "L'image ne doit pas dépasser 5 Mo.";
         }
 
@@ -105,17 +137,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($nouvelleImage) {
 
             $extension = strtolower(
-                pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION)
+                pathinfo(
+                    $_FILES["image"]["name"],
+                    PATHINFO_EXTENSION
+                )
             );
 
             $nomImage = uniqid("livre_", true) . "." . $extension;
 
             $cheminUpload = "../uploads/" . $nomImage;
 
-            if (!move_uploaded_file(
-                $_FILES["image"]["tmp_name"],
-                $cheminUpload
-            )) {
+
+            if (
+                !move_uploaded_file(
+                    $_FILES["image"]["tmp_name"],
+                    $cheminUpload
+                )
+            ) {
 
                 $erreurs[] = "Impossible d'envoyer l'image.";
 
@@ -172,6 +210,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if (empty($erreurs)) {
 
+            /* Message flash */
+
+            definirMessage("Livre modifié avec succès.");
+
+            /* Redirection */
+
             header("Location: index.php");
             exit;
         }
@@ -195,7 +239,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Modifier un livre</title>
 
@@ -205,10 +252,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <h1>Modifier un livre</h1>
 
+
     <p>
+
         <a href="index.php">
             ← Retour aux livres
         </a>
+
     </p>
 
 
@@ -229,7 +279,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
 
 
-    <form method="POST" enctype="multipart/form-data">
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars($csrf_token) ?>"
+        >
+
 
         <div>
 
@@ -241,7 +301,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 type="text"
                 id="titre"
                 name="titre"
-                value="<?= htmlspecialchars($livre['titre']) ?>"
+                value="<?= htmlspecialchars($livre["titre"]) ?>"
                 required
             >
 
@@ -261,7 +321,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 type="text"
                 id="auteur"
                 name="auteur"
-                value="<?= htmlspecialchars($livre['auteur']) ?>"
+                value="<?= htmlspecialchars($livre["auteur"]) ?>"
                 required
             >
 
@@ -286,10 +346,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <?php foreach ($categories as $categorie): ?>
 
                     <option
-                        value="<?= htmlspecialchars($categorie['id']) ?>"
-                        <?= $livre['categorie_id'] == $categorie['id'] ? 'selected' : '' ?>
+                        value="<?= htmlspecialchars($categorie["id"]) ?>"
+                        <?= $livre["categorie_id"] == $categorie["id"] ? "selected" : "" ?>
                     >
-                        <?= htmlspecialchars($categorie['nom']) ?>
+
+                        <?= htmlspecialchars($categorie["nom"]) ?>
+
                     </option>
 
                 <?php endforeach; ?>
@@ -312,7 +374,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 type="number"
                 id="annee"
                 name="annee"
-                value="<?= htmlspecialchars($livre['annee']) ?>"
+                value="<?= htmlspecialchars($livre["annee"]) ?>"
                 required
             >
 
@@ -329,8 +391,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </p>
 
             <img
-                src="../<?= htmlspecialchars($livre['image']) ?>"
-                alt="<?= htmlspecialchars($livre['titre']) ?>"
+                src="../<?= htmlspecialchars($livre["image"]) ?>"
+                alt="<?= htmlspecialchars($livre["titre"]) ?>"
                 width="120"
             >
 

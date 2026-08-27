@@ -1,17 +1,15 @@
 <?php
 
 require_once "../config/db.php";
+require_once "../includes/csrf.php";
 
-$erreurs = [];
+$csrf_token = genererTokenCSRF();
 
 $id = $_GET["id"] ?? null;
 
 if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
     die("Catégorie invalide.");
 }
-
-
-/* Récupération de la catégorie */
 
 $stmt = $pdo->prepare("
     SELECT id, nom
@@ -29,21 +27,24 @@ if (!$categorie) {
     die("Catégorie introuvable.");
 }
 
-
-/* Traitement du formulaire */
+$erreur = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    if (
+        !isset($_POST["csrf_token"]) ||
+        !verifierTokenCSRF($_POST["csrf_token"])
+    ) {
+        die("Erreur de sécurité : token CSRF invalide.");
+    }
 
     $nom = trim($_POST["nom"] ?? "");
 
     if ($nom === "") {
-        $erreurs[] = "Le nom de la catégorie est obligatoire.";
-    }
 
+        $erreur = "Le nom de la catégorie est obligatoire.";
 
-    /* Vérifier qu'une autre catégorie n'utilise pas déjà ce nom */
-
-    if (empty($erreurs)) {
+    } else {
 
         $stmt = $pdo->prepare("
             SELECT id
@@ -58,31 +59,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ]);
 
         if ($stmt->fetch()) {
-            $erreurs[] = "Cette catégorie existe déjà.";
+
+            $erreur = "Cette catégorie existe déjà.";
+
+        } else {
+
+            $stmt = $pdo->prepare("
+                UPDATE categories
+                SET nom = :nom
+                WHERE id = :id
+            ");
+
+            $stmt->execute([
+                ":nom" => $nom,
+                ":id" => $id
+            ]);
+
+            definirMessage("Catégorie modifiée avec succès.");
+
+            header("Location: categories.php");
+            exit;
         }
     }
-
-
-    /* Modification */
-
-    if (empty($erreurs)) {
-
-        $stmt = $pdo->prepare("
-            UPDATE categories
-            SET nom = :nom
-            WHERE id = :id
-        ");
-
-        $stmt->execute([
-            ":nom" => $nom,
-            ":id" => $id
-        ]);
-
-        header("Location: categories.php");
-        exit;
-    }
-
-    $categorie["nom"] = $nom;
 }
 
 ?>
@@ -91,69 +89,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="fr">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Modifier une catégorie</title>
-
 </head>
 
 <body>
 
-    <h1>Modifier une catégorie</h1>
+<h1>Modifier une catégorie</h1>
 
-    <p>
-        <a href="categories.php">
-            ← Retour aux catégories
-        </a>
+<?php if ($erreur): ?>
+
+    <p style="color:red;">
+        <?= htmlspecialchars($erreur) ?>
     </p>
 
+<?php endif; ?>
 
-    <?php if (!empty($erreurs)): ?>
+<form method="POST">
 
-        <div>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?= htmlspecialchars($csrf_token) ?>"
+    >
 
-            <?php foreach ($erreurs as $erreur): ?>
+    <label for="nom">
+        Nom de la catégorie :
+    </label>
 
-                <p>
-                    <?= htmlspecialchars($erreur) ?>
-                </p>
+    <input
+        type="text"
+        id="nom"
+        name="nom"
+        value="<?= htmlspecialchars($categorie["nom"]) ?>"
+        required
+    >
 
-            <?php endforeach; ?>
+    <button type="submit">
+        Enregistrer
+    </button>
 
-        </div>
+</form>
 
-    <?php endif; ?>
-
-
-    <form method="POST">
-
-        <div>
-
-            <label for="nom">
-                Nom de la catégorie :
-            </label>
-
-            <input
-                type="text"
-                id="nom"
-                name="nom"
-                value="<?= htmlspecialchars($categorie["nom"]) ?>"
-                required
-            >
-
-        </div>
-
-        <br>
-
-        <button type="submit">
-            Enregistrer les modifications
-        </button>
-
-    </form>
+<p>
+    <a href="categories.php">
+        Retour aux catégories
+    </a>
+</p>
 
 </body>
-
 </html>
