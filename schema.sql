@@ -6,6 +6,14 @@ USE bibliotheque;
 
 
 -- =========================================
+-- SUPPRESSION DES TABLES SI ELLES EXISTENT
+-- =========================================
+
+DROP TABLE IF EXISTS livres;
+DROP TABLE IF EXISTS categories;
+
+
+-- =========================================
 -- TABLE DES CATÉGORIES
 -- =========================================
 
@@ -36,7 +44,7 @@ CREATE TABLE livres (
 
 
 -- =========================================
--- CATÉGORIES
+-- INSERTION DES CATÉGORIES
 -- =========================================
 
 INSERT INTO categories (nom) VALUES
@@ -49,15 +57,77 @@ INSERT INTO categories (nom) VALUES
 
 
 -- =========================================
--- LIVRES
+-- INSERTION DES LIVRES
 -- =========================================
 
-INSERT INTO livres (titre, auteur, categorie_id, annee, image) VALUES
-('Les Ombres du Fleuve', 'Camille Vasseur', 1, 2019, 'uploads/livre1.jpg'),
-('Le Silence des Collines', 'Julien Marchand', 1, 2021, 'uploads/livre2.jpg'),
-('Nébuleuse Écarlate', 'Sofia Kranz', 2, 2020, 'uploads/livre3.jpg'),
-('Les Cités de Verre', 'Thomas Reyer', 2, 2022, 'uploads/livre4.jpg'),
-('L''Île aux Lucioles', 'Nadia Ferrand', 3, 2018, 'uploads/livre5.jpg'),
-('Le Royaume de Poche', 'Hugo Lenoir', 3, 2023, 'uploads/livre6.jpg'),
-('Les Gardiens de la Brume', 'Élise Roussel', 4, 2021, 'uploads/livre7.jpg'),
-('Chroniques du Vieux Port', 'Marc Aubin', 4, 2017, 'uploads/livre8.jpg');
+INSERT INTO livres (
+    titre,
+    auteur,
+    categorie_id,
+    annee,
+    image
+) VALUES
+
+(
+    'Les Ombres du Fleuve',
+    'Camille Vasseur',
+    1,
+    2019,
+    'uploads/livre1.jpg'
+),
+
+(
+    'Le Silence des Collines',
+    'Julien Marchand',
+    1,
+    2021,
+    'uploads/livre2.jpg'
+),
+
+(
+    'Nébuleuse Écarlate',
+    'Sofia Kranz',
+    2,
+    2020,
+    'uploads/livre3.jpg'
+),
+
+(
+    'Les Cités de Verre',
+    'Thomas Reyer',
+    2,
+    2022,
+    'uploads/livre4.jpg'
+),
+
+(
+    'L''Île aux Lucioles',
+    'Nadia Ferrand',
+    3,
+    2018,
+    'uploads/livre5.jpg'
+),
+
+(
+    'Le Royaume de Poche',
+    'Hugo Lenoir',
+    3,
+    2023,
+    'uploads/livre6.jpg'
+),
+
+(
+    'Les Gardiens de la Brume',
+    'Élise Roussel',
+    4,
+    2021,
+    'uploads/livre7.jpg'
+),
+
+(
+    'Chroniques du Vieux Port',
+    'Marc Aubin',
+    4,
+    2017,
+    'uploads/livre8.jpg'
+);
